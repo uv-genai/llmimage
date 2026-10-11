@@ -31,6 +31,9 @@ export interface RunOutcome {
   background?: string;
   created?: number;
   streamed: boolean;
+  /** True when `stream: true` was sent but the endpoint answered with plain JSON, so no
+   * partial previews were possible — tolerant multipart gateways do exactly this. */
+  streamIgnored?: boolean;
   durationMs: number;
 }
 
@@ -40,6 +43,8 @@ export interface RunSpec {
   /** A JSON string, or FormData for the multipart endpoints. */
   body: BodyInit;
   json: boolean;
+  /** Whether the request asked for SSE; lets a plain-JSON reply be reported honestly. */
+  stream: boolean;
   outputFormat: OutputFormat;
   signal: AbortSignal;
   onPartial?: (event: PartialImageEvent) => void;
@@ -167,6 +172,9 @@ export async function runImageTask(spec: RunSpec): Promise<RunOutcome> {
     background: payload.background,
     created: payload.created,
     streamed: false,
+    // The endpoint answered with JSON although a stream was requested: the images are
+    // valid, but there were no partial previews, so say so instead of pretending.
+    streamIgnored: spec.stream ? true : undefined,
     durationMs: performance.now() - started,
   };
 }

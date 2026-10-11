@@ -38,6 +38,15 @@ export function Stage({ studio }: { studio: Studio }) {
         {run.status === 'done' && run.result ? (
           <>
             <span className="chip tabular">{formatDuration(run.result.durationMs)}</span>
+            {run.result.streamIgnored ? (
+              <span
+                className="chip"
+                style={{ color: 'var(--warn)' }}
+                title="stream: true was sent, but the endpoint replied with plain JSON. Partial previews need a real text/event-stream response, so this gateway rendered without streaming."
+              >
+                stream ignored
+              </span>
+            ) : null}
             {run.result.usage?.total_tokens ? (
               <span className="chip tabular" title={usageTitle(run.result.usage)}>
                 {run.result.usage.total_tokens} tok
@@ -220,12 +229,19 @@ function ErrorCard({ studio }: { studio: Studio }) {
 
 function adviceFor(code: string, message: string): string {
   const text = `${code} ${message}`.toLowerCase();
+  // Checked first: gateways list every supported field when rejecting one, so later
+  // keyword probes would match the enumeration instead of the actual problem.
+  if (text.includes('unsupported parameter') || text.includes('unknown parameter')) {
+    return 'Your endpoint does not accept that field. Local engines usually reject stream and partial_images — turn streaming off in Settings — or drop the field from Extra JSON.';
+  }
   if (text.includes('connect')) return 'The endpoint refused the connection. Start the image service and re-check the base URL.';
   if (text.includes('invalid_api_key') || text.includes('401')) return 'The API key was rejected. Update it in Settings.';
   if (text.includes('unsupported_path') || text.includes('404')) return 'Wrong path or base URL — this gateway may mount the image API elsewhere.';
   if (text.includes('429') || text.includes('queue')) return 'The endpoint is busy; single-backend gateways queue callers. Wait and retry.';
   if (text.includes('incomplete_stream')) return 'The upstream died mid-stream. Retry with streaming off to get a clean error body.';
-  if (text.includes('size')) return 'That size is outside the model limits (dimension multiples and pixel budget).';
+  if (/(size|resolution|dimension|pixel)/.test(text) && /(must|exceed|outside|invalid|multiple|large|small|limit)/.test(text)) {
+    return 'That size is outside the model limits (dimension multiples and pixel budget).';
+  }
   if (text.includes('timeout')) return 'The request timed out. Raise LLMIMAGE_REQUEST_TIMEOUT or reduce the work per image.';
   if (code === 'invalid_request_error') {
     return 'The provider rejected the request body. If the field in that message is missing from the request preview, it came from Extra JSON.';

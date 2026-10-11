@@ -308,6 +308,7 @@ export function useStudio() {
         target,
         body,
         json: !multipart,
+        stream: params.stream,
         outputFormat: params.outputFormat,
         signal: controller.signal,
         onPartial: ({ image }) =>
@@ -318,11 +319,11 @@ export function useStudio() {
       setRun({ status: 'done', startedAt: Date.now() - outcome.durationMs, kind: task, partials: [], result: outcome });
       if (settings.autoSaveHistory) setHistory(await saveRun(buildRecord(outcome), settings.historyLimit));
       toast.push({
-        kind: 'ok',
+        kind: outcome.streamIgnored ? 'warn' : 'ok',
         title: `${outcome.images.length} image${outcome.images.length === 1 ? '' : 's'} ready`,
         detail: [
           `${(outcome.durationMs / 1000).toFixed(1)} s`,
-          outcome.streamed ? 'streamed' : 'single response',
+          outcome.streamIgnored ? 'endpoint ignored stream' : outcome.streamed ? 'streamed' : 'single response',
           outcome.usage?.total_tokens ? `${outcome.usage.total_tokens} tokens` : '',
         ]
           .filter(Boolean)

@@ -36,8 +36,10 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
   `bodyShape()` decides JSON vs multipart; `src/llmimage/app.py` forwards it with a copied
   header set (minus hop-by-hop headers) and streams SSE through unchanged. Do not
   re-serialise bodies: provider-specific fields must survive.
-- **Defaults are omitted, non-defaults are sent whole.** Strict gateways (`imagegen`)
-  reject unknown or unexpected fields; `stream` is always sent as a boolean.
+- **Defaults are omitted, non-defaults are sent whole.** Strict gateways reject unknown
+  fields — `imagegen` answers 400 `unsupported parameter 'stream'` for the key even when it
+  is `false`, so `params.ts` only adds `stream` when it is on. `imagegen` also has no
+  `/v1/images/variations` (404) and no SSE; test streaming with `scripts/mock_endpoint.py`.
 - **Base URL normalisation** lives in `src/llmimage/upstream.py`: a missing `/v1` is added,
   and on a 404 the opposite form is tried once and cached. Keep both variants working.
 - **Parameters are shared across the three tabs; prompts are per tab** (settings

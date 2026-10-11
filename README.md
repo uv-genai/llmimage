@@ -32,6 +32,38 @@ python3 scripts/mock_endpoint.py --port 8099      # stdlib only
 The mock streams partial images, so the streaming UI, token usage and error paths can be
 exercised offline.
 
+## Pairing it with the local `imagegen` service
+
+```bash
+cd ../imagegen
+export IMAGEGEN_API_KEYS="sk-studio-test"           # any token you like
+uv run imagegen serve --config config/service.toml   # http://127.0.0.1:8080
+
+cd ../llmimage
+uv run llmimage serve                               # http://127.0.0.1:8765
+```
+
+Open http://127.0.0.1:8765, click the connection chip, set the base URL to
+`http://127.0.0.1:8080/v1`, paste the key, press **Test connection** — the chip turns green
+and the model field offers `qwen-image-2.1` and `qwen-image-2.1-turbo`.
+
+What that pairing looks like in practice:
+
+- `qwen-image-2.1-turbo` at `512x512` takes ~10–16 s on an RTX 2070; the base model at its
+  default 40 steps takes ~90 s. An idle backend unload (5 min) makes the next request pay
+  the model load, so the first one after a break is always slower.
+- Generations and mask edits work end to end. `negative_prompt` and `strength` are sent when
+  set; anything else that backend understands (`sd_cpp`, seeds) goes in Extra JSON and is
+  relayed untouched.
+- `stream` is rejected in JSON bodies (`unsupported parameter 'stream'`) and **ignored** in
+  multipart edits, where the gateway answers with plain JSON. The studio says so — the run
+  header shows **stream ignored** instead of pretending partial previews happened. Point it
+  at `python3 scripts/mock_endpoint.py --port 8099` (base URL `http://127.0.0.1:8099/v1`,
+  any key) to watch real streaming.
+- `/v1/images/variations` is not implemented there, so the Vary tab returns a 404 with the
+  path advice. The mock supports generations and edits only, so try Vary against a
+  provider that implements it.
+
 ## What it does
 
 **Generate** — prompt (up to 32 000 chars), negative prompt when the engine supports it,

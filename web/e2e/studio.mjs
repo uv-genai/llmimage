@@ -166,6 +166,25 @@ try {
     await page.screenshot({ type: 'jpeg', quality: 55, path: `${SHOTS}/06-history.jpg` });
     await page.keyboard.press('Escape');
 
+    // --- a capability the engine lacks must explain itself --------------------
+    // Two honest paths, both against imagegen: it rejects `stream` in a JSON body (a fast
+    // 400 that never reaches the GPU, whose advice must name the field rather than blame
+    // the "size" it lists as supported) and silently ignores it in multipart, where the
+    // images are fine but no partials ever arrive.
+    await page.getByRole('switch', { name: 'Stream partial images' }).click();
+    await page.locator('nav').getByRole('button', { name: 'Generate' }).click();
+    await page.locator('footer').getByRole('button', { name: /Generate/ }).click();
+    await page.locator('main').getByText('Request failed').waitFor({ timeout: 30000 });
+    const streamAdvice = (await page.locator('main .hint').first().textContent()) ?? '';
+    check('rejected stream names the field problem', /does not accept that field/i.test(streamAdvice), streamAdvice.trim().slice(0, 44));
+    await page.screenshot({ type: 'jpeg', quality: 55, path: `${SHOTS}/09-unsupported-stream.jpg` });
+
+    await page.locator('nav').getByRole('button', { name: 'Edit' }).click();
+    await page.locator('footer').getByRole('button', { name: /^Edit/ }).click();
+    await page.locator('main').getByText('stream ignored').waitFor({ timeout: 180000 });
+    check('silently ignored stream is called out', true, 'chip: stream ignored');
+    await page.getByRole('switch', { name: 'Stream partial images' }).click();
+
     // --- request preview --------------------------------------------------
     await page.locator('button[title="Show the curl request"]').click();
     await page.getByText('Request preview').waitFor({ timeout: 4000 });
