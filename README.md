@@ -133,8 +133,7 @@ brings the final image and token usage. Non-streaming calls just wait.
 **Everything else** — history with thumbnails, parameters and images in IndexedDB (reuse a
 past run with one click), lightbox with metadata and download, a copyable `curl` preview of
 the exact request (with the token masked), light/dark themes that both clear WCAG AA, and
-keyboard `Enter` /
-`Ctrl+Enter` to run.
+keyboard `Enter` / `Ctrl+Enter` to run.
 
 ## Endpoints and compatibility
 
