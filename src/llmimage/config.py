@@ -51,12 +51,29 @@ class Settings:
     #: Refuse request bodies above this size (16 reference images is roughly 64 MB).
     max_body_bytes: int = field(default_factory=lambda: _env_int("LLMIMAGE_MAX_BODY_BYTES", 256 * 1024 * 1024))
     #: Where server-side connection profiles are persisted.
-    config_file: Path = field(default_factory=lambda: Path(_env("LLMIMAGE_CONFIG_FILE") or REPO_ROOT / "data" / "settings.json"))
+    config_file: Path = field(default_factory=lambda: Path(_env("LLMIMAGE_CONFIG_FILE") or _data_dir() / "settings.json"))
     #: Directory holding the built SPA. Empty means API-only mode.
     web_dist: Path = field(default_factory=lambda: _resolve_web_dist())
 
 
+def _data_dir() -> Path:
+    """Where to persist profiles.
+
+    A source checkout keeps using `./data` (that is what the docs and `.gitignore` refer
+    to). An installed wheel must not write next to `site-packages`, so it falls back to the
+    user's data directory.
+    """
+    override = _env("LLMIMAGE_DATA_DIR")
+    if override:
+        return Path(override).expanduser().resolve()
+    if (REPO_ROOT / "pyproject.toml").is_file():
+        return REPO_ROOT / "data"
+    base = Path(_env("XDG_DATA_HOME") or Path.home() / ".local" / "share")
+    return base / "llmimage"
+
+
 def _resolve_web_dist() -> Path:
+    """Locate the built SPA: repo checkout while developing, packaged copy when installed."""
     override = _env("LLMIMAGE_WEB_DIST")
     if override:
         return Path(override).expanduser().resolve()

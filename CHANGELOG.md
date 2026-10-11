@@ -2,6 +2,23 @@
 
 Notable changes per release. Dates are the tag dates.
 
+## 0.1.3 — 2026-10-11
+
+Installable, not just cloneable. Until this, a `pip`/`uv tool` install gave you the API proxy
+and **no studio**: the wheel carried only Python, and profiles were aimed at a directory next
+to `site-packages`.
+
+- the built SPA now ships inside the wheel at `llmimage/web/dist`, so `uv tool install` /
+  `pipx install` needs no Node; `uv build` fails if `web/dist` has not been built rather than
+  quietly producing a UI-less package
+- connection profiles move to `$XDG_DATA_HOME/llmimage/settings.json` (normally
+  `~/.local/share/llmimage`) when installed from a package; a source checkout keeps using
+  `./data`, and `LLMIMAGE_DATA_DIR` overrides both
+- verified end to end from a clean venv: `/api/health` reports `web_ready: true`, `/` serves
+  the studio, and a generation through the installed copy returns an image from imagegen
+- five new config tests for the path rules; 26 backend tests in total
+- README gained an Install section (wheel URL, `uv tool install`, checkout)
+
 ## 0.1.2 — 2026-10-11
 
 Readable text in the dark theme, and the checks that keep it that way.

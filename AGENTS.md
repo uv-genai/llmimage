@@ -38,6 +38,12 @@ fields in `web/package-lock.json`, then `uv lock` so `uv.lock` agrees. Add a `CH
 entry, commit, `git tag -a vX.Y.Z -m "…"`, `git push origin master vX.Y.Z`. `/api/health`
 reports `__version__`, so restart the running server to match the tag.
 
+Before publishing artifacts: `cd web && npm run build`, then `uv build`, then check the wheel
+really contains the UI — `unzip -l dist/*.whl | grep web/dist/index.html`.
+
+The release URL is quoted in the README install section, so a new release means editing that
+link too.
+
 ## Architecture rules that matter
 
 - **The proxy relays bodies verbatim.** `web/src/lib/params.ts` builds the request body and
@@ -65,6 +71,13 @@ reports `__version__`, so restart the running server to match the tag.
 - **Theme tokens are contrast-tested, not trusted.** The e2e measures `--text`, `--muted` and
   `--faint` against `--surface-solid` in both themes (AA: 4.5:1 for secondary text, 7:1 for
   primary). Darkening them in `globals.css` fails the suite.
+- **The wheel ships the studio.** `pyproject.toml` force-includes `web/dist` as
+  `llmimage/web/dist`; `config._resolve_web_dist()` prefers a repo checkout and falls back to
+  that packaged copy (`LLMIMAGE_WEB_DIST` overrides). Building without a built SPA fails on
+  purpose — a wheel without the UI serves an API and nothing else.
+- **Profile storage depends on the layout**: `./data/settings.json` inside a checkout,
+  otherwise `$XDG_DATA_HOME/llmimage` (`LLMIMAGE_DATA_DIR` wins outright). Never write next to
+  `site-packages`.
 - **Parameters are shared across the three tabs; prompts are per tab** (settings
   `version: 2`, `llmimage.ui.v2`, with migration from `llmimage.ui.v1`). Switching tabs
   must never change creative settings, and switching endpoints must never drop a typed

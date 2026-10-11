@@ -1,6 +1,6 @@
 [project]
 name = "llmimage"
-version = "0.1.2"
+version = "0.1.3"
 description = "A web studio for any OpenAI-compatible image generation endpoint (generations, edits, variations, streaming)."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,6 +28,14 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/llmimage"]
+
+# The backend serves the studio, so the built SPA ships inside the package: `uv tool install
+# llmimage` has to work on a machine with no Node. Build it first (scripts/build.sh).
+[tool.hatch.build.targets.wheel.force-include]
+"web/dist" = "llmimage/web/dist"
+
+[tool.hatch.build.targets.sdist]
+artifacts = ["web/dist"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

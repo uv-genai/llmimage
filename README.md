@@ -10,7 +10,25 @@ Dark, glassy single-page studio. No accounts, no telemetry, no cloud dependency:
 browser talks to a small FastAPI proxy on your machine, which talks to the endpoint you
 configure.
 
-## Quick start
+## Install
+
+One Python package is the whole application: the backend serves the web UI, so Node.js is only
+needed when you are changing the frontend. The built studio ships inside the wheel.
+
+```bash
+# Python 3.11+ and nothing else
+uv tool install "llmimage @ https://github.com/uv-genai/llmimage/releases/download/v0.1.3/llmimage-0.1.3-py3-none-any.whl"
+pipx install https://github.com/uv-genai/llmimage/releases/download/v0.1.3/llmimage-0.1.3-py3-none-any.whl
+
+llmimage serve                     # http://127.0.0.1:8765
+```
+
+Connection profiles are stored in `$XDG_DATA_HOME/llmimage/settings.json` (usually
+`~/.local/share/llmimage/`); `LLMIMAGE_DATA_DIR` moves them. Not on PyPI yet — until it is, use
+the release URL, or build locally with `./scripts/build.sh && uv build` (the wheel build fails
+unless the SPA has been built first, so you can never ship a package without its UI).
+
+## Quick start (from a checkout)
 
 ```bash
 uv sync
