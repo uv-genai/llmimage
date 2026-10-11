@@ -132,7 +132,8 @@ brings the final image and token usage. Non-streaming calls just wait.
 
 **Everything else** — history with thumbnails, parameters and images in IndexedDB (reuse a
 past run with one click), lightbox with metadata and download, a copyable `curl` preview of
-the exact request (with the token masked), light/dark themes, and keyboard `Enter` /
+the exact request (with the token masked), light/dark themes that both clear WCAG AA, and
+keyboard `Enter` /
 `Ctrl+Enter` to run.
 
 ## Endpoints and compatibility
@@ -171,15 +172,24 @@ uv run pytest                        # proxy tests against a stub OpenAI server
 cd web && npm run e2e                # browser test: real GPU endpoint + streaming mock
 ```
 
-`npm run e2e` drives a real browser (Playwright + Firefox). It skips politely if the app is
-not running, and covers: connection test and model list, a generation, the lightbox,
-reusing a result as an edit input, parameters carrying across tabs, mask painting and mask
-encoding, an edit round-trip, history, the `curl` preview, light theme, streaming partials
-and token usage against the bundled mock, and readable upstream errors. Set
-`UPSTREAM_URL`, `UPSTREAM_KEY` (and optionally `UPSTREAM_MODEL`) to point it at your engine.
-With no `UPSTREAM_KEY` the live half is skipped and only the offline mock checks run.
+`npm run e2e` drives a real browser (Playwright + Firefox): **30 checks** with an endpoint,
+**11** offline in about 15 s. It skips politely if the app is not running. Coverage includes:
+connecting with a key alone, recovering from a bad saved base URL, the model list, a
+generation, the lightbox, reusing a result as an edit input, parameters carrying across tabs,
+mask painting and mask encoding, an edit round-trip, history and `Reuse`, the `curl` preview,
+streaming partials and token usage against the bundled mock, an endpoint that rejects or
+silently ignores `stream`, readable advice for every upstream error, and the measured text
+contrast of both themes (WCAG AA). Set `UPSTREAM_URL`, `UPSTREAM_KEY` (and optionally
+`UPSTREAM_MODEL`) to point it at your engine; with no `UPSTREAM_KEY` the GPU half is skipped.
 
 Layout of the repo:
+
+## Releases
+
+Tagged, semver-ish, with notes in [CHANGELOG.md](CHANGELOG.md). `/api/health` reports the
+running version; a release commit bumps `src/llmimage/__init__.py`, `pyproject.toml`,
+`web/package.json`, `web/package-lock.json` and `uv lock` together, then
+`git tag -a vX.Y.Z && git push origin master vX.Y.Z`.
 
 ## License
 

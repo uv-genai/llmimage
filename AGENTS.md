@@ -29,14 +29,24 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
 `npm run e2e` env: `APP_URL` (default `http://127.0.0.1:8765`), `UPSTREAM_URL`,
 `UPSTREAM_KEY`, `UPSTREAM_MODEL`, `E2E_KEEP=1` to leave the browser open. It starts
 `scripts/mock_endpoint.py` itself for the streaming and error checks. Without
-`UPSTREAM_KEY` the GPU half is skipped (10 offline checks, ~15 s); with it, 22 checks.
+`UPSTREAM_KEY` the GPU half is skipped (11 offline checks, ~15 s); with it, 30 checks.
+
+## Releasing
+
+Bump `src/llmimage/__init__.py`, `pyproject.toml`, `web/package.json` and the two version
+fields in `web/package-lock.json`, then `uv lock` so `uv.lock` agrees. Add a `CHANGELOG.md`
+entry, commit, `git tag -a vX.Y.Z -m "…"`, `git push origin master vX.Y.Z`. `/api/health`
+reports `__version__`, so restart the running server to match the tag.
 
 ## Architecture rules that matter
 
 - **The proxy relays bodies verbatim.** `web/src/lib/params.ts` builds the request body and
   `bodyShape()` decides JSON vs multipart; `src/llmimage/app.py` forwards it with a copied
   header set (minus hop-by-hop headers) and streams SSE through unchanged. Do not
-  re-serialise bodies: provider-specific fields must survive.
+  re-serialise bodies: provider-specific fields must survive. The one deliberate exception is
+  an upstream **404** on a validated image path: `not_found_diagnostic()` replaces the bare
+  `{"detail":"Not Found"}` with `endpoint_not_found` plus the URLs that were tried, because
+  otherwise a wrong base URL is undiagnosable.
 - **Defaults are omitted, non-defaults are sent whole.** Strict gateways reject unknown
   fields — `imagegen` answers 400 `unsupported parameter 'stream'` for the key even when it
   is `false`, so `params.ts` only adds `stream` when it is on. `imagegen` also has no
@@ -49,6 +59,12 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
   `LLMIMAGE_BASE_URL`/`LLMIMAGE_API_KEY`, and the SPA mirrors it (`resolvedBaseUrl` in
   `useStudio.ts` falls back to `/api/config` defaults). The client is never supposed to know
   the engine's address: with `LLMIMAGE_BASE_URL` set, a remote browser needs only the key.
+- **A stream the endpoint ignores must stay visible.** `RunOutcome.streamIgnored` is set when
+  `stream: true` was sent and the reply was plain JSON (tolerant multipart gateways do this);
+  the run header chip and the toast report it. Never let a non-SSE reply pass as streamed.
+- **Theme tokens are contrast-tested, not trusted.** The e2e measures `--text`, `--muted` and
+  `--faint` against `--surface-solid` in both themes (AA: 4.5:1 for secondary text, 7:1 for
+  primary). Darkening them in `globals.css` fails the suite.
 - **Parameters are shared across the three tabs; prompts are per tab** (settings
   `version: 2`, `llmimage.ui.v2`, with migration from `llmimage.ui.v1`). Switching tabs
   must never change creative settings, and switching endpoints must never drop a typed
