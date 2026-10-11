@@ -309,13 +309,31 @@ def test_pasted_endpoint_url_is_reduced_to_the_api_root(
     Appending the endpoint to that produced `…/v1/models/models` and a bare 404, which reads
     like a broken server rather than a doubled path.
     """
-    for pasted in (f"{stub_origin}/v1/models", f"{stub_origin}/images/generations", f"{stub_origin}/v1/images/edits/"):
+    for pasted in (
+        f"{stub_origin}/v1/models",
+        f"{stub_origin}/images/generations",
+        f"{stub_origin}/v1/images/edits/",
+        f"{stub_origin}/v1/models/models",  # a bad save on top of a bad paste
+    ):
         response = httpx.post(
             f"{studio_origin}/api/models", headers={"X-Base-Url": pasted, "X-Api-Key": "k"}, timeout=15
         )
         assert response.status_code == 200, (pasted, response.text)
         assert response.json()["object"] == "list"
-    assert [item["auth"] for item in seen() if item["path"] == "/v1/models"] == ["Bearer k"] * 3
+    assert [item["auth"] for item in seen() if item["path"] == "/v1/models"] == ["Bearer k"] * 4
+
+
+def test_upstream_404_names_the_url_it_tried(studio_origin: str, stub_origin: str) -> None:
+    """A path that is not an image endpoint must not come back as a bare `{"detail":...}`."""
+    response = httpx.post(
+        f"{studio_origin}/api/models",
+        headers={"X-Base-Url": f"{stub_origin}/api/v1", "X-Api-Key": "k"},
+        timeout=15,
+    )
+    assert response.status_code == 404
+    error = response.json()["error"]
+    assert error["code"] == "endpoint_not_found"
+    assert error["detail"]["attempted"] == [f"{stub_origin}/api/v1/models", f"{stub_origin}/api/models"]
 
 
 def test_server_default_endpoint_needs_no_client_configuration(studio_origin: str) -> None:

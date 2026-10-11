@@ -95,6 +95,21 @@ What that pairing looks like in practice:
   path advice. The mock supports generations and edits only, so try Vary against a
   provider that implements it.
 
+### If "Test connection" fails
+
+The chip shows the endpoint and status; the drawer spells out what was tried.
+
+| Message | Meaning | Fix |
+| --- | --- | --- |
+| `invalid API key` | the key does not match `IMAGEGEN_API_KEYS` | retype the key |
+| `Nothing answers at http://…` | the base URL is not the API root | press **Use the endpoint configured on the server**, or clear the field |
+| `The endpoint refused the connection` | imagegen is not running, or the port is wrong | start imagegen, re-check `:8080` |
+| `host 'x' is not in LLMIMAGE_ALLOWED_HOSTS` | that upstream host is not permitted | add it to the allowlist, or use the local address |
+| `endpoint ignored stream` | the images are fine; the engine does not stream partials | nothing — or use a streaming provider |
+
+Base URLs are normalised, so `http://host:8080`, `…/v1`, and a pasted endpoint URL (`…/v1/models`,
+`…/images/generations`, even doubled up) all resolve to the same API root.
+
 ## What it does
 
 **Generate** — prompt (up to 32 000 chars), negative prompt when the engine supports it,

@@ -236,6 +236,9 @@ function adviceFor(code: string, message: string): string {
   }
   if (text.includes('connect')) return 'The endpoint refused the connection. Start the image service and re-check the base URL.';
   if (text.includes('invalid_api_key') || text.includes('401')) return 'The API key was rejected. Update it in Settings.';
+  if (code === 'endpoint_not_found') {
+    return 'Nothing answered at that address. The base URL must be the API root (http://host:port/v1), not an endpoint — clear the field to use the endpoint configured on the server. If the message above names a model, fix the model instead.';
+  }
   if (text.includes('unsupported_path') || text.includes('404')) return 'Wrong path or base URL — this gateway may mount the image API elsewhere.';
   if (text.includes('429') || text.includes('queue')) return 'The endpoint is busy; single-backend gateways queue callers. Wait and retry.';
   if (text.includes('incomplete_stream')) return 'The upstream died mid-stream. Retry with streaming off to get a clean error body.';

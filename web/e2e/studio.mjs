@@ -89,6 +89,27 @@ try {
       check('server default endpoint configured', false, 'start with LLMIMAGE_BASE_URL=http://127.0.0.1:8080/v1');
     }
 
+    // --- a stale override must be one click from fixed -------------------
+    // This is the laptop case that looked like "test connection fails": a saved base URL
+    // carrying endpoint segments. The error now names the URL it tried, and Settings offers
+    // the server endpoint.
+    await page.evaluate(() => {
+      const key = 'llmimage.ui.v2';
+      const base = JSON.parse(localStorage.getItem(key) || '{}');
+      localStorage.setItem(key, JSON.stringify({ ...base, baseUrl: 'http://127.0.0.1:8080/api/v1' }));
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.locator('button[title="Connection and preferences"]').click();
+    await page.getByRole('button', { name: 'Test connection' }).click();
+    await page.getByText(/Nothing answers at/).first().waitFor({ timeout: 20000 });
+    const notFound = (await page.getByText(/Nothing answers at/).first().textContent()) ?? '';
+    check('bad base URL reports the attempted address', notFound.includes('/api/v1/models'), notFound.trim().slice(0, 56));
+    await page.getByRole('button', { name: /Use the endpoint configured on the server/ }).click();
+    await page.getByRole('button', { name: 'Test connection' }).click();
+    await page.getByText(/Reachable · \d+ model/).waitFor({ timeout: 20000 });
+    check('one click restores the server endpoint', true);
+    await page.keyboard.press('Escape');
+
     // --- configure the endpoint ------------------------------------------
     await page.locator('button[title="Connection and preferences"]').click();
     const urlInput = page.locator('input[placeholder="http://127.0.0.1:8080/v1"]');

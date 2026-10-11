@@ -32,6 +32,14 @@ export function SettingsDrawer({ studio }: { studio: Studio }) {
     });
   };
 
+  /** Drop the local override so requests inherit LLMIMAGE_BASE_URL from the server. */
+  const useServerDefault = () => {
+    setDraftUrl('');
+    studio.setSessionBaseUrl('');
+    studio.update({ baseUrl: '', profileId: '' });
+    toast.push({ kind: 'info', title: 'Using the endpoint configured on the server', detail: serverDefault });
+  };
+
   const persist = async () => {
     if (!draftUrl.trim()) {
       toast.push({ kind: 'warn', title: 'Set a base URL first' });
@@ -99,6 +107,11 @@ export function SettingsDrawer({ studio }: { studio: Studio }) {
                   : 'Blank uses the endpoint configured on the server: '}
                 {!draftUrl.trim() ? <span className="font-mono">{serverDefault}</span> : null}
               </p>
+            ) : null}
+            {serverDefault && draftUrl.trim() && draftUrl.trim() !== serverDefault ? (
+              <button type="button" className="btn mt-2 w-full" onClick={useServerDefault}>
+                <Server size={12} /> Use the endpoint configured on the server
+              </button>
             ) : null}
           </Field>
 

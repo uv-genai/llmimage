@@ -100,10 +100,19 @@ ENDPOINT_SUFFIXES = tuple(f"/{name}" for name in sorted(ALLOWED_PATHS))
 
 
 def strip_endpoint_suffix(path: str) -> str:
+    """Cut endpoint paths off a pasted base URL, however many times they repeat.
+
+    Copy-paste and one bad save can leave `…/v1/models/models`; stripping once would still
+    produce a doubled path, so keep going until the root is all that is left.
+    """
     lowered = path.lower()
-    for suffix in ENDPOINT_SUFFIXES:
-        if lowered.endswith(suffix):
-            return path[: -len(suffix)]
+    changed = True
+    while changed:
+        changed = False
+        for suffix in ENDPOINT_SUFFIXES:
+            if lowered.endswith(suffix):
+                path, lowered = path[: -len(suffix)], lowered[: -len(suffix)]
+                changed = True
     return path
 
 

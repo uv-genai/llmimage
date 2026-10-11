@@ -241,6 +241,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         await response.aclose()
         headers = relay_headers(response.headers)
         headers.setdefault("content-type", "application/json")
+        if response.status_code == 404:
+            # The path was validated before forwarding, so a 404 can only mean the base URL
+            # points at the wrong place. Say which URL was tried, or it is undiagnosable.
+            payload = not_found_diagnostic(payload, urls)
+            headers["content-type"] = "application/json"
         return Response(content=payload, status_code=response.status_code, headers=headers)
 
     async def _send(
@@ -335,6 +340,39 @@ async def _json_body(request: Request) -> dict[str, object]:
     if not isinstance(parsed, dict):
         raise UpstreamError("JSON body must be an object", status=400, code="bad_json")
     return parsed
+
+
+#: Bodies that say nothing beyond "it isn't here".
+_EMPTY_404 = {"", "not found", "not_found", "404 not found", "not found.", "no route found"}
+
+
+def not_found_diagnostic(upstream_body: bytes, urls: list[str]) -> bytes:
+    """Turn a bare upstream 404 into something the studio can act on.
+
+    Typical cause: the base URL was pasted as an endpoint (`…/v1/models`) or picked up an
+    extra segment, so `…/v1/models/models` was requested. Providers answer that with
+    `{"detail":"Not Found"}`, which leaves the user guessing what address was even tried.
+    """
+    note = ""
+    try:
+        parsed = json.loads(upstream_body)
+    except (ValueError, UnicodeDecodeError):
+        parsed = None
+    if isinstance(parsed, dict):
+        error = parsed.get("error")
+        message = error.get("message") if isinstance(error, dict) else (parsed.get("detail") or parsed.get("message"))
+        if isinstance(message, str) and message.strip().lower() not in _EMPTY_404:
+            note = f" The endpoint replied: {message.strip()}"
+    body = {
+        "error": {
+            "message": f"Nothing answers at {' or '.join(urls)}.{note}",
+            "type": "upstream_not_found",
+            "code": "endpoint_not_found",
+            "param": None,
+            "detail": {"attempted": urls},
+        }
+    }
+    return json.dumps(body).encode()
 
 
 def _is_streaming(content_type: str) -> bool:
