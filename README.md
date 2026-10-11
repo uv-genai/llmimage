@@ -103,6 +103,12 @@ With no `UPSTREAM_KEY` the live half is skipped and only the offline mock checks
 
 Layout of the repo:
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Layout
+
 ```
 src/llmimage/        FastAPI proxy, config, profiles, CLI
 web/src/lib/         API client, parameter model, presets, store, IndexedDB history
