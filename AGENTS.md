@@ -14,7 +14,8 @@ gateway, default `http://127.0.0.1:8080/v1`).
 
 ```bash
 uv sync                                   # python deps
-uv run llmimage serve --port 8765         # backend + built SPA
+uv run llmimage serve --port 8765         # backend + built SPA, binds 127.0.0.1
+LLMIMAGE_ALLOWED_HOSTS=127.0.0.1,api.openai.com uv run llmimage serve --host 0.0.0.0   # LAN
 uv run pytest                             # proxy tests (stub upstream, no GPU needed)
 
 cd web && npm install
@@ -73,8 +74,9 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
 
 - Playwright `getByText` matches substrings; a strict-mode violation usually means a toast
   and an inline card say the same thing — scope to `main`.
-- `pkill -f mock_endpoint` also matches the shell running the command; use a bracketed
-  pattern (`[m]ock_endpoint`).
+- `pkill -f <pattern>` also matches the shell running it. Bracketing (`[m]ock_endpoint`) only
+  helps when that exact literal string appears nowhere else on the same command line —
+  killing a listener by PID from `ss -tlnp` is safer.
 - A bare `data:` URI in a CSS gradient breaks Lightning CSS; use `rgb(0 0 0 / 0.28)`.
 - A mock or stub that pre-renders its SSE payload before writing it does not test
   streaming — it must flush chunk by chunk.

@@ -32,6 +32,28 @@ python3 scripts/mock_endpoint.py --port 8099      # stdlib only
 The mock streams partial images, so the streaming UI, token usage and error paths can be
 exercised offline.
 
+## Using it from another device
+
+```bash
+LLMIMAGE_ALLOWED_HOSTS="127.0.0.1,localhost,api.openai.com" \
+  uv run llmimage serve --host 0.0.0.0 --port 8765
+# then from any machine on the network: http://<host-ip>:8765
+```
+
+Three things worth knowing before you do that:
+
+- **There is no login.** Anyone who can reach the port can submit image requests with your
+  credits and drive the UI, so bind `0.0.0.0` only on a network you trust.
+- **Keep `LLMIMAGE_ALLOWED_HOSTS` set in this mode.** The browser tells the proxy which
+  upstream to call, so without an allowlist a LAN peer could aim it at internal addresses.
+  With one, anything outside the list is refused (`403 host_not_allowed`).
+- **`127.0.0.1` in the base URL field means the server's loopback**, not the laptop's. That is
+  how you reach an `imagegen` running next to the studio — and `imagegen` can stay bound to
+  `127.0.0.1`, because the proxy is on the same host and forwards to it locally.
+
+The API key is still typed per tab and kept in memory, so on a shared machine sign out of
+the browser session when you are done.
+
 ## Pairing it with the local `imagegen` service
 
 ```bash
