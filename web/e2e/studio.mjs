@@ -199,6 +199,15 @@ try {
     await page.getByText(/History · \d+ runs?/).waitFor({ timeout: 5000 });
     const historyItems = await page.locator('li:has(button:has-text("Reuse"))').count();
     check('history stored both runs', historyItems >= 2, `${historyItems} entries`);
+    // Reuse must land on the tab the run belonged to, with its prompt visible.
+    await page.locator('button[title="Load these parameters"]').first().click();
+    const restoredPrompt = await page.locator('textarea').first().inputValue();
+    const editPressed = await page.locator('nav').getByRole('button', { name: 'Edit' }).getAttribute('aria-pressed');
+    check(
+      'reuse restores prompt and jumps to its tab',
+      restoredPrompt.includes('EDITED E2E') && editPressed === 'true',
+      `${editPressed === 'true' ? 'edit tab · ' : 'wrong tab · '}${restoredPrompt.slice(0, 34)}`,
+    );
     await page.screenshot({ type: 'jpeg', quality: 55, path: `${SHOTS}/06-history.jpg` });
     await page.keyboard.press('Escape');
 

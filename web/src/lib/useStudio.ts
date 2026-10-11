@@ -396,10 +396,13 @@ export function useStudio() {
   const reuseRun = useCallback(
     (record: RunRecord) => {
       setTaskParams(record.kind, record.params, record.prompt);
+      // Show the tab the run belonged to, otherwise the restored prompt lands in a draft
+      // the user cannot see (e.g. reusing an edit while the Generate tab is open).
+      update({ task: record.kind });
       setDrawer(null);
       toast.push({ kind: 'info', title: 'Parameters restored', detail: record.prompt.slice(0, 90) });
     },
-    [setTaskParams, toast],
+    [setTaskParams, toast, update],
   );
 
   const loadRunInputs = useCallback(
