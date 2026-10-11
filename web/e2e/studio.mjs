@@ -69,6 +69,47 @@ try {
   }
   check('empty state before any run', await page.getByText('Nothing rendered yet').isVisible());
 
+  // --- readability: secondary text has to clear WCAG AA on a panel -----------
+  // Measured, because "is it readable?" cannot be answered from a token name, and the
+  // ratios here only ever drift downward as new shades get added.
+  const measureContrast = () =>
+    page.evaluate(() => {
+      // Let the browser resolve the colour (shorthand hex, named colours, alpha), then read
+      // the rgb() it reports — hand-parsing each syntax is how these checks lie.
+      const toRgb = (raw) => {
+        const probe = document.createElement('span');
+        probe.style.color = String(raw).trim();
+        document.body.appendChild(probe);
+        const computed = getComputedStyle(probe).color;
+        probe.remove();
+        const parts = (computed.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+        return parts.length === 3 && parts.every((n) => !Number.isNaN(n)) ? parts : [0, 0, 0];
+      };
+      const luminance = ([r, g, b]) => {
+        const f = (v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * f(r / 255) + 0.7152 * f(g / 255) + 0.0722 * f(b / 255);
+      };
+      const root = getComputedStyle(document.documentElement);
+      const panel = toRgb(root.getPropertyValue('--surface-solid'));
+      const ratio = (colour) => {
+        const [high, low] = [luminance(toRgb(colour)), luminance(panel)].sort((x, y) => y - x);
+        return Number(((high + 0.05) / (low + 0.05)).toFixed(2));
+      };
+      const hint = document.querySelector('.hint');
+      return {
+        faint: ratio(root.getPropertyValue('--faint')),
+        muted: ratio(root.getPropertyValue('--muted')),
+        text: ratio(root.getPropertyValue('--text')),
+        hintText: hint ? ratio(getComputedStyle(hint).color) : 0,
+      };
+    });
+  const darkContrast = await measureContrast();
+  check(
+    'dark theme text clears WCAG AA',
+    darkContrast.faint >= 4.5 && darkContrast.muted >= 4.5 && darkContrast.text >= 7 && darkContrast.hintText >= 4.5,
+    `text ${darkContrast.text}:1 · muted ${darkContrast.muted}:1 · faint ${darkContrast.faint}:1`,
+  );
+
   if (!UPSTREAM_KEY) {
     // Without a key the GPU half is skipped; the mock half below still proves
     // streaming, usage reporting, and error handling.
@@ -241,7 +282,13 @@ try {
     await page.getByRole('button', { name: 'Toggle theme' }).click();
     await page.waitForFunction(() => document.documentElement.dataset.theme === 'light', undefined, { timeout: 4000 });
     await page.screenshot({ type: 'jpeg', quality: 55, path: `${SHOTS}/07-light.jpg` });
-    check('light theme applied', true);
+    check('light theme applied', (await page.evaluate(() => document.documentElement.dataset.theme)) === 'light');
+    const lightContrast = await measureContrast();
+    check(
+      'light theme text clears WCAG AA',
+      lightContrast.faint >= 4.5 && lightContrast.muted >= 4.5 && lightContrast.text >= 7,
+      `text ${lightContrast.text}:1 · muted ${lightContrast.muted}:1 · faint ${lightContrast.faint}:1`,
+    );
   }
   if (mockUp) {
     // --- streaming against the bundled mock --------------------------------

@@ -19,11 +19,11 @@
   --surface-2: rgba(28, 28, 41, 0.72);
   --surface-solid: #101019;
   --sunken: rgba(0, 0, 0, 0.35);
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.18);
-  --text: #eeeef8;
-  --muted: #a0a0ba;
-  --faint: #6e6d88;
+  --border: rgba(255, 255, 255, 0.13);
+  --border-strong: rgba(255, 255, 255, 0.24);
+  --text: #f4f4fb;
+  --muted: #c5c5da;
+  --faint: #a8a7c2;
   --accent: #8b5cf6;
   --accent-2: #29d3ee;
   --accent-3: #f471b5;
