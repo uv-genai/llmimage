@@ -42,7 +42,13 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
   is `false`, so `params.ts` only adds `stream` when it is on. `imagegen` also has no
   `/v1/images/variations` (404) and no SSE; test streaming with `scripts/mock_endpoint.py`.
 - **Base URL normalisation** lives in `src/llmimage/upstream.py`: a missing `/v1` is added,
-  and on a 404 the opposite form is tried once and cached. Keep both variants working.
+  a pasted endpoint suffix (`…/v1/models`, `…/images/generations`) is cut back to the root
+  first (`strip_endpoint_suffix`, otherwise it doubles to `/v1/models/models` -> 404), and on
+  a 404 the form without `/v1` is tried once and cached. Keep all three behaviours working.
+- **Target resolution** (`_credentials` in `app.py`) is header -> stored profile ->
+  `LLMIMAGE_BASE_URL`/`LLMIMAGE_API_KEY`, and the SPA mirrors it (`resolvedBaseUrl` in
+  `useStudio.ts` falls back to `/api/config` defaults). The client is never supposed to know
+  the engine's address: with `LLMIMAGE_BASE_URL` set, a remote browser needs only the key.
 - **Parameters are shared across the three tabs; prompts are per tab** (settings
   `version: 2`, `llmimage.ui.v2`, with migration from `llmimage.ui.v1`). Switching tabs
   must never change creative settings, and switching endpoints must never drop a typed

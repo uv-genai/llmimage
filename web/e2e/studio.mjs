@@ -74,6 +74,21 @@ try {
     // streaming, usage reporting, and error handling.
     check('live endpoint checks skipped (set UPSTREAM_URL + UPSTREAM_KEY)', true);
   } else {
+    // --- a remote client should need only the key -------------------------
+    // The studio normally runs next to the engine, where LLMIMAGE_BASE_URL supplies the
+    // address. Typing it by hand is how paths get doubled (…/v1/models + models -> 404).
+    const serverConfig = await (await fetch(`${BASE}/api/config`)).json();
+    if (serverConfig.defaults?.base_url) {
+      await page.locator('button[title="Connection and preferences"]').click();
+      await page.locator('input[type="password"]').fill(UPSTREAM_KEY);
+      await page.getByRole('button', { name: 'Test connection' }).click();
+      await page.getByText(/Reachable · \d+ model/).waitFor({ timeout: 20000 });
+      check('key alone is enough with a server-side endpoint', true, serverConfig.defaults.base_url);
+      await page.keyboard.press('Escape');
+    } else {
+      check('server default endpoint configured', false, 'start with LLMIMAGE_BASE_URL=http://127.0.0.1:8080/v1');
+    }
+
     // --- configure the endpoint ------------------------------------------
     await page.locator('button[title="Connection and preferences"]').click();
     const urlInput = page.locator('input[placeholder="http://127.0.0.1:8080/v1"]');

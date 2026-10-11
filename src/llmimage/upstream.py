@@ -88,10 +88,23 @@ def normalise_base(raw: str) -> str:
         raise UpstreamError(f"unsupported base URL scheme {parsed.scheme!r}", status=400, code="bad_base_url")
     if not parsed.netloc:
         raise UpstreamError("base URL has no host", status=400, code="bad_base_url")
-    path = parsed.path.rstrip("/")
+    path = strip_endpoint_suffix(parsed.path.rstrip("/"))
     if path.endswith("/v1"):
         return urlunparse((parsed.scheme, parsed.netloc, path, "", "", ""))
     return urlunparse((parsed.scheme, parsed.netloc, f"{path}/v1", "", "", ""))
+
+
+#: Endpoint suffixes people paste out of docs and shell history. Left in the base URL they
+#: would be appended to themselves (`…/v1/models` + `models`), so cut back to the API root.
+ENDPOINT_SUFFIXES = tuple(f"/{name}" for name in sorted(ALLOWED_PATHS))
+
+
+def strip_endpoint_suffix(path: str) -> str:
+    lowered = path.lower()
+    for suffix in ENDPOINT_SUFFIXES:
+        if lowered.endswith(suffix):
+            return path[: -len(suffix)]
+    return path
 
 
 def without_v1(base_url: str) -> str | None:

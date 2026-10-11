@@ -8,6 +8,8 @@ import type { Studio } from '../lib/useStudio';
 
 export function SettingsDrawer({ studio }: { studio: Studio }) {
   const { settings, update, backend, health, backendError, resolvedBaseUrl, activeProfile } = studio;
+  /** Set with LLMIMAGE_BASE_URL; an empty field then means "use what the server says". */
+  const serverDefault = backend?.defaults.base_url ?? '';
   const toast = useToast();
   const [draftUrl, setDraftUrl] = useState(resolvedBaseUrl);
   const [draftKey, setDraftKey] = useState('');
@@ -90,6 +92,14 @@ export function SettingsDrawer({ studio }: { studio: Studio }) {
               onChange={(event) => setDraftUrl(event.target.value)}
               onKeyDown={(event) => event.key === 'Enter' && applyDraft()}
             />
+            {serverDefault ? (
+              <p className="hint mt-2">
+                {draftUrl.trim()
+                  ? 'Overrides the endpoint configured on the server.'
+                  : 'Blank uses the endpoint configured on the server: '}
+                {!draftUrl.trim() ? <span className="font-mono">{serverDefault}</span> : null}
+              </p>
+            ) : null}
           </Field>
 
           <Field label="API key" hint="Held in this browser tab only. Saving a profile stores it server-side (0600).">

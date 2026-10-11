@@ -301,6 +301,31 @@ def test_base_url_without_v1_suffix_is_normalised(
     assert prompts == [f"p {stub_origin}", f"p {stub_origin}/", f"p {stub_origin}/v1"]
 
 
+def test_pasted_endpoint_url_is_reduced_to_the_api_root(
+    studio_origin: str, stub_origin: str, seen: Callable[[], list]
+) -> None:
+    """People copy `…/v1/models` or `…/images/generations` out of docs and shell history.
+
+    Appending the endpoint to that produced `…/v1/models/models` and a bare 404, which reads
+    like a broken server rather than a doubled path.
+    """
+    for pasted in (f"{stub_origin}/v1/models", f"{stub_origin}/images/generations", f"{stub_origin}/v1/images/edits/"):
+        response = httpx.post(
+            f"{studio_origin}/api/models", headers={"X-Base-Url": pasted, "X-Api-Key": "k"}, timeout=15
+        )
+        assert response.status_code == 200, (pasted, response.text)
+        assert response.json()["object"] == "list"
+    assert [item["auth"] for item in seen() if item["path"] == "/v1/models"] == ["Bearer k"] * 3
+
+
+def test_server_default_endpoint_needs_no_client_configuration(studio_origin: str) -> None:
+    """`LLMIMAGE_BASE_URL` is the whole point of running the proxy next to the engine: a
+    laptop on the LAN supplies a key, never an address."""
+    response = httpx.post(f"{studio_origin}/api/models", timeout=15)
+    assert response.status_code == 200, response.text
+    assert response.json()["data"][0]["id"] == "stub-image"
+
+
 def test_prefixed_gateway_is_retried_without_v1(
     studio_origin: str, stub_origin: str, seen: Callable[[], list]
 ) -> None:

@@ -35,9 +35,10 @@ exercised offline.
 ## Using it from another device
 
 ```bash
+LLMIMAGE_BASE_URL="http://127.0.0.1:8080/v1" \
 LLMIMAGE_ALLOWED_HOSTS="127.0.0.1,localhost,api.openai.com" \
   uv run llmimage serve --host 0.0.0.0 --port 8765
-# then from any machine on the network: http://<host-ip>:8765
+# then from any machine on the network: http://<host-ip>:8765 — key only, no address
 ```
 
 Three things worth knowing before you do that:
@@ -47,9 +48,10 @@ Three things worth knowing before you do that:
 - **Keep `LLMIMAGE_ALLOWED_HOSTS` set in this mode.** The browser tells the proxy which
   upstream to call, so without an allowlist a LAN peer could aim it at internal addresses.
   With one, anything outside the list is refused (`403 host_not_allowed`).
-- **`127.0.0.1` in the base URL field means the server's loopback**, not the laptop's. That is
-  how you reach an `imagegen` running next to the studio — and `imagegen` can stay bound to
-  `127.0.0.1`, because the proxy is on the same host and forwards to it locally.
+- **Addresses are resolved by the proxy, not the browser.** `127.0.0.1` in the base URL field
+  is the *server's* loopback, which is how a laptop reaches an `imagegen` bound to loopback —
+  and why `LLMIMAGE_BASE_URL` is the better answer: leave the field blank and every client
+  inherits the endpoint the studio runs next to.
 
 The API key is still typed per tab and kept in memory, so on a shared machine sign out of
 the browser session when you are done.
@@ -62,12 +64,19 @@ export IMAGEGEN_API_KEYS="sk-studio-test"           # any token you like
 uv run imagegen serve --config config/service.toml   # http://127.0.0.1:8080
 
 cd ../llmimage
+export LLMIMAGE_BASE_URL="http://127.0.0.1:8080/v1"  # the proxy resolves this locally
 uv run llmimage serve                               # http://127.0.0.1:8765
 ```
 
-Open http://127.0.0.1:8765, click the connection chip, set the base URL to
-`http://127.0.0.1:8080/v1`, paste the key, press **Test connection** — the chip turns green
-and the model field offers `qwen-image-2.1` and `qwen-image-2.1-turbo`.
+Open http://127.0.0.1:8765, click the connection chip, paste the **key** (the same value as
+`IMAGEGEN_API_KEYS`), press **Test connection** — the chip turns green and the model field
+offers `qwen-image-2.1` and `qwen-image-2.1-turbo`. With `LLMIMAGE_BASE_URL` set you never
+type an address, which also means every device that reaches the studio — laptop, phone, a
+coworker's machine — only needs the key. Settings shows the server-configured endpoint under
+the base URL field; anything you type there overrides it for that browser tab.
+
+A base URL is normalised, so `http://127.0.0.1:8080`, `…/v1`, and a full endpoint URL copied
+out of the docs (`…/v1/models`, `…/images/generations`) all resolve to the same API root.
 
 What that pairing looks like in practice:
 
