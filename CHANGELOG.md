@@ -2,6 +2,18 @@
 
 Notable changes per release. Dates are the tag dates.
 
+## Unreleased
+
+- fixed `llmimage info` and a bare `llmimage` crashing with `AttributeError: 'Namespace'
+  object has no attribute 'base_url'` — those flags belong to the `serve` subparser only, so
+  every non-`serve` invocation died before doing any work
+- documented the whole configuration surface: each `LLMIMAGE_*` variable with its default and
+  effect, `serve` flag precedence, `llmimage info` output, the `settings.json` profile schema
+  and where it lives per layout, and the fact that `.env` is **not** auto-loaded
+- `.env.example` completed with the variables it was missing (`*_ALLOWED_HOSTS` notes,
+  `*_MAX_BODY_BYTES`, `*_DATA_DIR`, `*_CONFIG_FILE`, `*_WEB_DIST`)
+- four CLI tests (`tests/test_cli.py`); 30 backend tests, 30 browser checks with an endpoint
+
 ## 0.1.3 — 2026-10-11
 
 Installable, not just cloneable. Until this, a `pip`/`uv tool` install gave you the API proxy

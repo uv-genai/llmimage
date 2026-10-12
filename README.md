@@ -50,6 +50,102 @@ python3 scripts/mock_endpoint.py --port 8099      # stdlib only
 The mock streams partial images, so the streaming UI, token usage and error paths can be
 exercised offline.
 
+## Configuration
+
+Server configuration is **environment variables only** — there is no config file to edit to
+run the studio. Note that the app reads the process environment and does **not** open a `.env`
+file itself, so use one of these:
+
+```bash
+set -a; . ./.env; set +a        # any POSIX shell
+direnv exec . llmimage serve    # with direnv installed
+# systemd unit: EnvironmentFile=/etc/llmimage/env
+```
+
+`.env.example` lists the same variables.
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `LLMIMAGE_HOST` | `127.0.0.1` | bind address; `0.0.0.0` to reach the studio from other devices |
+| `LLMIMAGE_PORT` | `8765` | bind port |
+| `LLMIMAGE_BASE_URL` | *(empty)* | default upstream API root, e.g. `http://127.0.0.1:8080/v1`. Set it and clients need only a key |
+| `LLMIMAGE_API_KEY` | *(empty)* | bearer token used when the browser sends no `X-Api-Key` |
+| `LLMIMAGE_ALLOWED_HOSTS` | *(empty = any)* | comma-separated hostname globs the proxy may contact, e.g. `127.0.0.1,api.openai.com`. Set this whenever you bind beyond loopback |
+| `LLMIMAGE_REQUEST_TIMEOUT` | `1800` | seconds an upstream image request may run — local diffusion on CPU-offloaded weights is slow |
+| `LLMIMAGE_MAX_BODY_BYTES` | `268435456` (256 MiB) | request body cap, sized for many reference images |
+| `LLMIMAGE_DATA_DIR` | see below | directory holding `settings.json` |
+| `LLMIMAGE_CONFIG_FILE` | `$LLMIMAGE_DATA_DIR/settings.json` | exact path of the profile store |
+| `LLMIMAGE_WEB_DIST` | packaged copy, else `web/dist` | where the built SPA lives; if absent the backend runs API-only |
+
+`serve` also takes flags that win over the environment: `--host`, `--port`, `--base-url`,
+`--api-key`, `--reload`. To see what a configuration actually resolves to, run `info`:
+
+```console
+$ LLMIMAGE_BASE_URL=http://127.0.0.1:8080/v1 llmimage info
+bind              http://127.0.0.1:8765
+default base URL  http://127.0.0.1:8080/v1
+default API key   (none)
+allowed hosts     (any)
+request timeout   1800s
+max body          256 MiB
+settings file     /home/you/.local/share/llmimage/settings.json
+web build         /home/you/llmimage/web/dist
+```
+
+### Connection profiles: `settings.json`
+
+The server writes this file when you save a profile in the Settings drawer, and seeds an
+`Environment` profile from `LLMIMAGE_BASE_URL` on first run if nothing is stored. It is
+created `0600` and replaced atomically.
+
+```json
+{
+  "version": 1,
+  "updated_at": "2026-10-12T02:20:00Z",
+  "active_profile_id": "env",
+  "profiles": [
+    {
+      "id": "env",
+      "name": "Environment",
+      "base_url": "http://127.0.0.1:8080/v1",
+      "api_key": "sk-studio-test",
+      "headers": {}
+    }
+  ]
+}
+```
+
+| Field | Notes |
+| --- | --- |
+| `id` | short handle; `env` is the seeded profile |
+| `name` | shown in the UI |
+| `base_url` | upstream API root, normalised the same way as a typed one |
+| `api_key` | the bearer token — **plaintext on disk**, owner-only permissions, so treat the file as a secret |
+| `headers` | extra headers for providers that need more than `Authorization`, e.g. `{"api-version": "2025-04-01"}` |
+| `active_profile_id` | which profile applies when the client does not name one |
+
+Where the file lives:
+
+| Layout | Path |
+| --- | --- |
+| source checkout | `./data/settings.json` |
+| installed wheel | `$XDG_DATA_HOME/llmimage/settings.json`, normally `~/.local/share/llmimage/` |
+| explicit | `LLMIMAGE_CONFIG_FILE`, or `LLMIMAGE_DATA_DIR` for the directory |
+
+The API never returns a stored key: `/api/profiles` reports `has_api_key` and
+`api_key_preview` (`sk-stu…test`) only.
+
+### Precedence
+
+For each request the proxy resolves its target in this order:
+
+1. `X-Base-Url` / `X-Api-Key` / `X-Profile-Id` headers sent by the browser
+2. the active stored profile
+3. `LLMIMAGE_BASE_URL` / `LLMIMAGE_API_KEY`
+
+A key can never come from the browser's `localStorage` — only the endpoint URL, parameters and
+prompt drafts are stored there.
+
 ## Using it from another device
 
 ```bash

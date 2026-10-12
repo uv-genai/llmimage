@@ -48,6 +48,22 @@ Quote install commands with the **bare wheel URL**: `uv tool install <url>` and
 `pipx install <url>` both work, but pipx rejects `name @ url` and `file://` specs, so the
 PEP 508 direct-reference form is uv-only. A plain local path works for both.
 
+## Configuration surface
+
+All server configuration is environment variables — full table in the README: `LLMIMAGE_HOST`,
+`LLMIMAGE_PORT`, `LLMIMAGE_BASE_URL`, `LLMIMAGE_API_KEY`, `LLMIMAGE_ALLOWED_HOSTS`,
+`LLMIMAGE_REQUEST_TIMEOUT`, `LLMIMAGE_MAX_BODY_BYTES`, `LLMIMAGE_DATA_DIR`,
+`LLMIMAGE_CONFIG_FILE`, `LLMIMAGE_WEB_DIST`. `serve` flags (`--host`, `--port`, `--base-url`,
+`--api-key`, `--reload`) win over the environment. `llmimage info` prints the resolved values —
+run it before debugging a "connection fails" report.
+
+`.env` is **not** auto-loaded; `.env.example` is a template the operator sources
+(`set -a; . ./.env; set +a`). Do not add dotenv loading unless it is decided on.
+
+`settings.json` is the profile store: `version: 1`, `active_profile_id`, and a list of
+`{id, name, base_url, api_key, headers}`, written `0600` and replaced atomically. The browser's
+own state lives in `localStorage` under `llmimage.ui.v2` and never contains a key.
+
 ## Architecture rules that matter
 
 - **The proxy relays bodies verbatim.** `web/src/lib/params.ts` builds the request body and

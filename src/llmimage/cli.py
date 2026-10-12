@@ -30,9 +30,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     command = args.command or "serve"
 
-    if args.base_url:
+    # Only `serve` declares these flags, so read them defensively: `llmimage info` and a bare
+    # `llmimage` have no such attributes.
+    if getattr(args, "base_url", None):
         os.environ["LLMIMAGE_BASE_URL"] = args.base_url
-    if args.api_key:
+    if getattr(args, "api_key", None):
         os.environ["LLMIMAGE_API_KEY"] = args.api_key
     settings = Settings()
     if getattr(args, "host", None):
