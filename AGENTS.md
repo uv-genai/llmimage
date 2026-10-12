@@ -42,7 +42,11 @@ Before publishing artifacts: `cd web && npm run build`, then `uv build`, then ch
 really contains the UI — `unzip -l dist/*.whl | grep web/dist/index.html`.
 
 The release URL is quoted in the README install section, so a new release means editing that
-link too.
+link too — and it only resolves after `gh release create`.
+
+Quote install commands with the **bare wheel URL**: `uv tool install <url>` and
+`pipx install <url>` both work, but pipx rejects `name @ url` and `file://` specs, so the
+PEP 508 direct-reference form is uv-only. A plain local path works for both.
 
 ## Architecture rules that matter
 
