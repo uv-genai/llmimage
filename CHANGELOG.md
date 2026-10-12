@@ -2,7 +2,7 @@
 
 Notable changes per release. Dates are the tag dates.
 
-## Unreleased
+## 0.1.4 — 2026-10-12
 
 - fixed `llmimage info` and a bare `llmimage` crashing with `AttributeError: 'Namespace'
   object has no attribute 'base_url'` — those flags belong to the `serve` subparser only, so
