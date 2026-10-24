@@ -153,15 +153,16 @@ try {
 
     check(
     'model field opts out of autofill',
-    (await page.locator('input[list="model-suggestions"]').getAttribute('autocomplete')) === 'off',
+    (await page.locator('input[role="combobox"]').getAttribute('autocomplete')) === 'off',
     'prevents Chrome treating it as an email/login field',
   );
-  // ...and stays usable: it still accepts a typed model id.
-  await page.locator('input[list="model-suggestions"]').fill('typed-just-now');
-  check(
-    'model field accepts input',
-    (await page.locator('input[list="model-suggestions"]').inputValue()) === 'typed-just-now',
-  );
+  // ...and clicking a suggestion actually selects it (the datalist this replaced fired no
+  // change on click, so picking a model silently did nothing).
+  await page.getByRole('button', { name: 'Show model suggestions' }).click();
+  await page.locator('#model-suggestions [role="option"]').first().click();
+  const pickedModel = await page.locator('input[role="combobox"]').inputValue();
+  check('clicking a model suggestion selects it', pickedModel.length > 0, pickedModel);
+  await page.locator('input[role="combobox"]').fill(MODEL);
 
   // --- configure the endpoint ------------------------------------------
     await page.locator('button[title="Connection and preferences"]').click();
@@ -178,7 +179,7 @@ try {
     // --- generate ---------------------------------------------------------
     // The model list arrives asynchronously; a model typed around that response must
     // survive it (an earlier build let the late list overwrite it).
-    const modelInput = page.locator('input[list="model-suggestions"]');
+    const modelInput = page.locator('input[role="combobox"]');
     await modelInput.fill(MODEL);
     await page.waitForTimeout(1200);
     check('typed model survives the model-list response', (await modelInput.inputValue()) === MODEL, await modelInput.inputValue());
