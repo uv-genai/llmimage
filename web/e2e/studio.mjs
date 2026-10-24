@@ -34,6 +34,7 @@ function check(name, ok, detail = '') {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`);
 }
 
+const DATA_DIR = process.env.LLMIMAGE_DATA_DIR || '';
 const MOCK_PORT = 8099;
 const MOCK_URL = `http://127.0.0.1:${MOCK_PORT}/v1`;
 const mock = spawn('python3', [fileURLToPath(new URL('../../scripts/mock_endpoint.py', import.meta.url)), '--port', String(MOCK_PORT)], { stdio: 'ignore' });

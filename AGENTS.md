@@ -31,6 +31,12 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
 `scripts/mock_endpoint.py` itself for the streaming and error checks. Without
 `UPSTREAM_KEY` the GPU half is skipped (11 offline checks, ~15 s); with it, 32 checks.
 
+The e2e reads the server's profile store, so a dirty `data/settings.json` makes checks fail
+on stale state, not app behaviour. The pytest suite is hermetic (tmp store); the browser
+suite is not — run the server with a throwaway `LLMIMAGE_DATA_DIR` (the `e2e` npm script sets
+one for the client side) and it stays isolated from whatever a previous run or manual test
+left in `./data`.
+
 ## Releasing
 
 Bump `src/llmimage/__init__.py`, `pyproject.toml`, `web/package.json` and the two version
