@@ -17,8 +17,8 @@ needed when you are changing the frontend. The built studio ships inside the whe
 
 ```bash
 # Python 3.11+ and nothing else
-uv tool install https://github.com/uv-genai/llmimage/releases/download/v0.1.4/llmimage-0.1.4-py3-none-any.whl
-pipx install  https://github.com/uv-genai/llmimage/releases/download/v0.1.4/llmimage-0.1.4-py3-none-any.whl
+uv tool install https://github.com/uv-genai/llmimage/releases/download/v0.1.5/llmimage-0.1.5-py3-none-any.whl
+pipx install  https://github.com/uv-genai/llmimage/releases/download/v0.1.5/llmimage-0.1.5-py3-none-any.whl
 
 llmimage serve                     # http://127.0.0.1:8765
 ```

@@ -2,6 +2,21 @@
 
 Notable changes per release. Dates are the tag dates.
 
+## 0.1.5 — 2026-10-12
+
+Model selection actually works, and Chrome stops interfering.
+
+- the model field used a `<input list>` + `<datalist>`, which fires no change event when an
+  option is clicked — so picking a model silently did nothing in Chrome and Firefox
+  (confirmed broken on the original 0.1.0 build, not a recent regression). Replaced with a
+  text field plus a real dropdown: a chevron or focusing the field lists `/v1/models`,
+  clicking a suggestion fills the field, and typing any custom id still works
+- Chrome's password manager paired the API-key input with the model field as an
+  email/username and popped a confirm-password prompt. The key now uses
+  `autocomplete="new-password"` and the model field `autocomplete="off"`
+- the e2e suite asserts that clicking a suggestion selects it (32 checks with an endpoint,
+  11 offline)
+
 ## 0.1.4 — 2026-10-12
 
 - fixed `llmimage info` and a bare `llmimage` crashing with `AttributeError: 'Namespace'
