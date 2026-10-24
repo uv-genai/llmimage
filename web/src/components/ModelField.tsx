@@ -35,6 +35,8 @@ export function ModelField({ studio }: { studio: Studio }) {
       <input
         className="input"
         list="model-suggestions"
+        // Not a credential field: password managers may otherwise try to autofill this.
+        autoComplete="off"
         placeholder={modelsStatus === 'loading' ? 'loading models…' : 'model id, e.g. gpt-image-2'}
         value={params.model}
         onChange={(event) => setModel(event.target.value)}

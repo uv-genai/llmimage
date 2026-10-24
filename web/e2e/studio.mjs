@@ -151,7 +151,19 @@ try {
     check('one click restores the server endpoint', true);
     await page.keyboard.press('Escape');
 
-    // --- configure the endpoint ------------------------------------------
+    check(
+    'model field opts out of autofill',
+    (await page.locator('input[list="model-suggestions"]').getAttribute('autocomplete')) === 'off',
+    'prevents Chrome treating it as an email/login field',
+  );
+  // ...and stays usable: it still accepts a typed model id.
+  await page.locator('input[list="model-suggestions"]').fill('typed-just-now');
+  check(
+    'model field accepts input',
+    (await page.locator('input[list="model-suggestions"]').inputValue()) === 'typed-just-now',
+  );
+
+  // --- configure the endpoint ------------------------------------------
     await page.locator('button[title="Connection and preferences"]').click();
     const urlInput = page.locator('input[placeholder="http://127.0.0.1:8080/v1"]');
     await urlInput.fill(UPSTREAM_URL);

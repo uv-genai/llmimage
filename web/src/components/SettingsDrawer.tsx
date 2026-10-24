@@ -120,6 +120,10 @@ export function SettingsDrawer({ studio }: { studio: Studio }) {
               <input
                 className="input font-mono text-[12.5px]"
                 type={showKey ? 'text' : 'password'}
+                // No autofill: password managers pair this with the model field as an email,
+                // then block that dropdown with a confirmation prompt. This is not a login.
+                autoComplete="new-password"
+                aria-label="API key"
                 placeholder={activeProfile?.has_api_key ? `stored: ${activeProfile.api_key_preview}` : 'sk-…'}
                 value={draftKey}
                 spellCheck={false}
