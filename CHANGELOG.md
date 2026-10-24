@@ -27,7 +27,7 @@ Model selection actually works, and Chrome stops interfering.
   and where it lives per layout, and the fact that `.env` is **not** auto-loaded
 - `.env.example` completed with the variables it was missing (`*_ALLOWED_HOSTS` notes,
   `*_MAX_BODY_BYTES`, `*_DATA_DIR`, `*_CONFIG_FILE`, `*_WEB_DIST`)
-- four CLI tests (`tests/test_cli.py`); 30 backend tests, 30 browser checks with an endpoint
+- four CLI tests (`tests/test_cli.py`); 30 backend tests, 32 browser checks with an endpoint
 
 ## 0.1.3 — 2026-10-11
 

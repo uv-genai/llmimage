@@ -29,7 +29,7 @@ python3 scripts/mock_endpoint.py --port 8099   # offline upstream (streams parti
 `npm run e2e` env: `APP_URL` (default `http://127.0.0.1:8765`), `UPSTREAM_URL`,
 `UPSTREAM_KEY`, `UPSTREAM_MODEL`, `E2E_KEEP=1` to leave the browser open. It starts
 `scripts/mock_endpoint.py` itself for the streaming and error checks. Without
-`UPSTREAM_KEY` the GPU half is skipped (11 offline checks, ~15 s); with it, 30 checks.
+`UPSTREAM_KEY` the GPU half is skipped (11 offline checks, ~15 s); with it, 32 checks.
 
 ## Releasing
 
@@ -127,6 +127,11 @@ own state lives in `localStorage` under `llmimage.ui.v2` and never contains a ke
 
 ## Gotchas
 
+- A stale `data/settings.json` can make the suite fail in ways that look like app bugs: a
+  leftover profile with a bogus `base_url` becomes the `active_profile_id`, so `resolvedBaseUrl`
+  silently prefers it and Test connection targets the wrong host. When "key alone is enough"
+  or a saved-URL recovery check fails unexpectedly, inspect the profile store first — do not
+  assume a code regression.
 - Playwright `getByText` matches substrings; a strict-mode violation usually means a toast
   and an inline card say the same thing — scope to `main`.
 - `pkill -f <pattern>` also matches the shell running it. Bracketing (`[m]ock_endpoint`) only

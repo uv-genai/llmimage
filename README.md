@@ -285,7 +285,7 @@ uv run pytest                        # proxy tests against a stub OpenAI server
 cd web && npm run e2e                # browser test: real GPU endpoint + streaming mock
 ```
 
-`npm run e2e` drives a real browser (Playwright + Firefox): **30 checks** with an endpoint,
+`npm run e2e` drives a real browser (Playwright + Firefox): **32 checks** with an endpoint,
 **11** offline in about 15 s. It skips politely if the app is not running. Coverage includes:
 connecting with a key alone, recovering from a bad saved base URL, the model list, a
 generation, the lightbox, reusing a result as an edit input, parameters carrying across tabs,

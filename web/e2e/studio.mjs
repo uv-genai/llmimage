@@ -59,6 +59,19 @@ page.on('console', (message) => {
 });
 page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${error.message}`));
 
+const resetUi = () =>
+  page.evaluate(() => {
+    // A clean baseline for the live-endpoint half: a reload restores from localStorage, so
+    // anything a previous block wrote (e.g. the streaming test's example.test base URL)
+    // would otherwise leak into "key alone is enough" and fail it on stale state.
+    const key = 'llmimage.ui.v2';
+    const base = JSON.parse(localStorage.getItem(key) || '{}');
+    localStorage.setItem(
+      key,
+      JSON.stringify({ ...base, baseUrl: '', profileId: '', params: { ...(base.params ?? {}), model: '' } }),
+    );
+  });
+
 try {
   await page.goto(BASE, { waitUntil: 'networkidle' });
 
@@ -129,6 +142,8 @@ try {
     } else {
       check('server default endpoint configured', false, 'start with LLMIMAGE_BASE_URL=http://127.0.0.1:8080/v1');
     }
+    await resetUi();
+    await page.reload({ waitUntil: 'networkidle' });
 
     // --- a stale override must be one click from fixed -------------------
     // This is the laptop case that looked like "test connection fails": a saved base URL
