@@ -249,6 +249,33 @@ past run with one click), lightbox with metadata and download, a copyable `curl`
 the exact request (with the token masked), light/dark themes that both clear WCAG AA, and
 keyboard `Enter` / `Ctrl+Enter` to run.
 
+### Structured layout (MOSS dialect)
+
+Some engines — the sibling `imagegen` service among them — advertise per-model
+structured-layout support on `GET /v1/models` with an optional `layout` key. llmimage reads
+it: a model that declares a dialect carries a chip in the suggestions list, and the controls
+column gains a **Layout** panel.
+
+Place `image` and `text` elements on a canvas matching the current **Size**, drag to move,
+pull the corner to resize. Coordinates are stored as fractions of the canvas and converted to
+absolute pixels only when emitted, so changing **Size** re-maps the placement automatically
+(while **Size** is `auto` nothing is emitted — there is no concrete canvas to compute on).
+**Insert into prompt** writes the layout into the prompt box:
+
+- as a MOSS layout document when the selected model advertises `layout: "moss"` —
+  `summary.caption`, `items[]` with `label`, `caption`, `bbox`, `bbox_format: "yxyx"`,
+  `bbox_coord_space: "abs_centralized"` (pixel coordinates with the canvas centre as origin,
+  so a 1024×1024 canvas spans −512…+512);
+- otherwise as a coarse natural-language rendering ("An image … in the top-left region; …") —
+  best effort: whether spatial words are obeyed is up to the weights. In the poster benchmark
+  the Flux Klein family is systematically bottom-light, while MOSS fills the frame.
+
+The layout never changes the request shape: the document goes out as an ordinary `prompt`
+string and is relayed untouched, like any other prompt. Models without the key behave
+exactly as before, and engines predating the extension still work (the key is simply
+absent). The mock endpoint advertises a `moss-image` profile, so the whole flow is testable
+without a GPU.
+
 ## Endpoints and compatibility
 
 | Endpoint | Notes |
