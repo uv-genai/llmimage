@@ -11,6 +11,10 @@ emitted as absolute pixels (MOSS `yxyx`, centre-origin) only on insert; models w
 dialect get a natural-language rendering instead. The mock endpoint now also serves a
 `moss-image` profile advertising `layout: "moss"`.
 
+The mock endpoint's edits route no longer crashes on multipart bodies (it parsed every
+POST as JSON, so a binary PNG body died on `json.loads`); it now reads the form and
+honours its `size` field instead of hard-coding 256x256 (Closes #2).
+
 ## 0.1.5 — 2026-10-12
 
 Model selection actually works, and Chrome stops interfering.
