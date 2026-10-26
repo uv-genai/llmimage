@@ -37,6 +37,17 @@ suite is not — run the server with a throwaway `LLMIMAGE_DATA_DIR` (the `e2e` 
 one for the client side) and it stays isolated from whatever a previous run or manual test
 left in `./data`.
 
+## Issue tracking
+
+Every new feature, significant change, or bug fix is tracked in a GitHub issue on this
+repository **before** the work lands:
+
+- Open one first — `gh issue create --title … --body …` with motivation, plan, test plan,
+  and out of scope.
+- Reference it in commits (`Refs #N`; `Closes #N` only when the branch finishes the work)
+  and keep the issue's checklist updated as steps land.
+- Doc typo fixes are exempt; anything touching behaviour, protocols, tests, or tooling is not.
+
 ## Releasing
 
 Bump `src/llmimage/__init__.py`, `pyproject.toml`, `web/package.json` and the two version
