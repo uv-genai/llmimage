@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import re
 import struct
 import time
 import zlib
@@ -128,6 +129,18 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802 - stdlib naming
         path = self.path.rstrip("/")
+        # Edits arrive as multipart/form-data with binary image parts: read the raw
+        # bytes before any JSON parsing, or json.loads chokes on the PNG magic (0x89).
+        if path == "/v1/images/edits":
+            length = int(self.headers.get("content-length") or 0)
+            raw = self.rfile.read(length) if length else b""
+            if b'name="mask"' not in raw:
+                self._json(400, {"error": {"message": "the mock edit requires a mask part", "param": "mask"}})
+                return
+            match = re.search(rb'name="size"\r\n\r\n([0-9]+x[0-9]+)', raw)
+            size = match.group(1).decode() if match else "1024x1024"
+            self._json(200, {"created": int(time.time()), "output_format": "png", "data": [image_payload(size, 0.5)]})
+            return
         body = self._read_json()
         if path == "/v1/images/generations":
             size = str(body.get("size") or "512x512")
@@ -159,14 +172,6 @@ class Handler(BaseHTTPRequestHandler):
                     "usage": {"total_tokens": 100, "input_tokens": 70, "output_tokens": 30},
                 },
             )
-            return
-        if path == "/v1/images/edits":
-            length = int(self.headers.get("content-length") or 0)
-            raw = self.rfile.read(length) if length else b""
-            if b'name="mask"' not in raw:
-                self._json(400, {"error": {"message": "the mock edit requires a mask part", "param": "mask"}})
-                return
-            self._json(200, {"created": int(time.time()), "output_format": "png", "data": [image_payload("256x256", 0.5)]})
             return
         self._json(404, {"error": {"message": f"no route {path}", "type": "invalid_request_error"}})
 
