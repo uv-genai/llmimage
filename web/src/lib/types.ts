@@ -38,6 +38,8 @@ export interface ModelInfo {
   created?: number;
   ownedBy?: string;
   description?: string;
+  /** Structured-layout dialect advertised by the engine (e.g. "moss"); absent means not advertised. */
+  layout?: string;
 }
 
 export interface Profile {

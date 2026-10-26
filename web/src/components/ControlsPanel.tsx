@@ -1,5 +1,6 @@
 import { Braces, CircleAlert, RotateCcw, Square, TriangleAlert, WandSparkles, Zap } from 'lucide-react';
 import { Collapse, Field, Segmented, Slider, SwitchRow } from './ui';
+import { LayoutPanel } from './LayoutPanel';
 import { ModelField } from './ModelField';
 import { PromptField } from './PromptField';
 import { SizeField } from './SizeField';
@@ -94,6 +95,8 @@ export function ControlsPanel({ studio }: { studio: Studio }) {
             </Field>
           ) : null}
         </section>
+
+        <LayoutPanel studio={studio} />
 
         <Collapse title="Provider extensions" badge={extensionBadge(params)}>
           <Field

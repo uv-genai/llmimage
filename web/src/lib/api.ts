@@ -268,6 +268,7 @@ export async function fetchModels(target: ConnectionTarget): Promise<{ models: M
       created: typeof item.created === 'number' ? item.created : undefined,
       ownedBy: typeof item.owned_by === 'string' ? item.owned_by : undefined,
       description: typeof item.description === 'string' ? item.description : undefined,
+      layout: typeof item.layout === 'string' ? item.layout : undefined,
     }))
     .filter((item) => item.id)
     .sort((left, right) => left.id.localeCompare(right.id));

@@ -111,6 +111,14 @@ class Handler(BaseHTTPRequestHandler):
                             "created": int(time.time()),
                             "owned_by": "llmimage-mock",
                             "description": "Local mock endpoint for exercising the studio, including streaming.",
+                        },
+                        {
+                            "id": "moss-image",
+                            "object": "model",
+                            "created": int(time.time()),
+                            "owned_by": "llmimage-mock",
+                            "description": "Mock MOSS-style profile that advertises structured-layout support.",
+                            "layout": "moss",
                         }
                     ],
                 },

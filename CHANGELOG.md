@@ -2,6 +2,15 @@
 
 Notable changes per release. Dates are the tag dates.
 
+## Unreleased
+
+Studio layout support (Refs #1): `fetchModels` now keeps the engine's `layout` capability,
+model suggestions badge the advertised dialect, and a new Layout panel places image/text
+elements on a canvas sized by the Size param. Coordinates are stored as fractions and
+emitted as absolute pixels (MOSS `yxyx`, centre-origin) only on insert; models without a
+dialect get a natural-language rendering instead. The mock endpoint now also serves a
+`moss-image` profile advertising `layout: "moss"`.
+
 ## 0.1.5 — 2026-10-12
 
 Model selection actually works, and Chrome stops interfering.

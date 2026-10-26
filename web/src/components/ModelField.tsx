@@ -86,6 +86,7 @@ export function ModelField({ studio }: { studio: Studio }) {
           >
             {suggestions.map((id) => {
               const active = id === params.model;
+              const dialect = models.find((model) => model.id === id)?.layout;
               return (
                 <li key={id}>
                   <button
@@ -99,7 +100,14 @@ export function ModelField({ studio }: { studio: Studio }) {
                       setOpen(false);
                     }}
                   >
-                    <span className="truncate">{id}</span>
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate">{id}</span>
+                      {dialect ? (
+                        <span className="chip chip-accent" title={`structured layout: ${dialect}`}>
+                          {dialect}
+                        </span>
+                      ) : null}
+                    </span>
                     {active ? <Check size={12} style={{ color: 'var(--accent-2)' }} /> : null}
                   </button>
                 </li>
@@ -113,7 +121,7 @@ export function ModelField({ studio }: { studio: Studio }) {
         {models.length
           ? `${models.length} model${models.length === 1 ? '' : 's'} reported by this endpoint${
               selected?.description ? ` · ${selected.description}` : ''
-            }`
+            }${selected?.layout ? ` · layout: ${selected.layout}` : ''}`
           : modelsStatus === 'error'
             ? `Models could not be listed (${modelsError}). Type an id or use the suggestions.`
             : 'Pick a suggestion or type any id the endpoint accepts.'}

@@ -175,6 +175,12 @@ try {
   // ...and clicking a suggestion actually selects it (the datalist this replaced fired no
   // change on click, so picking a model silently did nothing).
   await page.getByRole('button', { name: 'Show model suggestions' }).click();
+  // Layout capability (issue #1): the mock advertises moss-image; its row must carry the chip.
+  check(
+    'model list badges the layout dialect',
+    (await page.locator('#model-suggestions [role="option"]', { hasText: 'moss-image' }).locator('span[title="structured layout: moss"]').count()) === 1,
+    'capability from GET /v1/models surfaces in the picker',
+  );
   await page.locator('#model-suggestions [role="option"]').first().click();
   const pickedModel = await page.locator('input[role="combobox"]').inputValue();
   check('clicking a model suggestion selects it', pickedModel.length > 0, pickedModel);
